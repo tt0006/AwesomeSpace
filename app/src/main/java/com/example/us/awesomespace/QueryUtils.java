@@ -3,42 +3,49 @@ package com.example.us.awesomespace;
 import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.util.ArrayList;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.Charset;
 
 /**
  * Helper methods related to parse response data
  */
 public final class QueryUtils {
 
-    /** Sample JSON response */
-    private static final String SAMPLE_JSON_RESPONSE = "{\"date\":\"2019-01-01\",\"explanation\":\"This floating ring is the size of a galaxy.  In fact, it is a galaxy -- or at least part of one: the photogenic Sombrero Galaxy, one of the largest galaxies in the nearby Virgo Cluster of Galaxies.  The dark band of dust that obscures the mid-section of the Sombrero Galaxy in optical light actually glows brightly in infrared light.  The featured image, digitally sharpened, shows the infrared glow, recently recorded by the orbiting Spitzer Space Telescope, superposed in false-color on an existing image taken by NASA's Hubble Space Telescope in optical light. The Sombrero Galaxy, also known as M104, spans about 50,000 light years across and lies 28 million light years away.  M104 can be seen with a small telescope in the direction of the constellation Virgo.   News: New Horizons Spacecraft Passes Ultima Thule\",\"hdurl\":\"https://apod.nasa.gov/apod/image/1901/sombrero_spitzer_3000.jpg\",\"media_type\":\"image\",\"service_version\":\"v1\",\"title\":\"The Sombrero Galaxy in Infrared\",\"url\":\"https://apod.nasa.gov/apod/image/1901/sombrero_spitzer_1080.jpg\"}";
+    private static final String LOG_TAG = QueryUtils.class.getName();
 
     /**
      * Create a private constructor as no one should ever create a {@link QueryUtils} object.
      * This class is only meant to hold static variables and methods, which can be accessed
      * directly from the class name QueryUtils (and an object instance of QueryUtils is not needed).
      */
-    private QueryUtils() {
-    }
+    private QueryUtils() { }
 
+
+    //Fetch json data code ------------------------------------------------------------------------
     /**
      * Return an {@link APOD} object that has been built up from
      * parsing a JSON response.
      */
-    public static APOD extractAPODrequest() {
+    public static APOD extractAPODrequest(String jsonResponse) {
 
-        // Create an empty ArrayList that we can start adding earthquakes to
-        ArrayList<APOD> APODs = new ArrayList<>();
+        APOD apod = null;
 
         //parse the SAMPLE_JSON_RESPONSE.
         try {
 
-            JSONObject root = new JSONObject(SAMPLE_JSON_RESPONSE);
+            JSONObject root = new JSONObject(jsonResponse);
 
             String title = root.optString("title");
             String explanation = root.optString("explanation");
             String hdurl = root.optString("hdurl");
-            APODs.add(new APOD(title,explanation,hdurl));
+            apod = new APOD(title,explanation,hdurl);
 
         } catch (JSONException e) {
             // If an error is thrown when executing any of the above statements in the "try" block,
@@ -48,7 +55,95 @@ public final class QueryUtils {
         }
 
         // Return the APOD object
-        return APODs.get(0);
+        return apod;
+    }
+
+    /**
+     * Returns new URL object from the given string URL.
+     */
+    private static URL createUrl(String stringUrl) {
+        URL url = null;
+        try {
+            url = new URL(stringUrl);
+        } catch (MalformedURLException e) {
+            Log.e(LOG_TAG, "Error with creating URL ", e);
+        }
+        return url;
+    }
+
+    /**
+     * Make an HTTP request to the given URL and return a String as the response.
+     */
+    private static String makeHttpRequest(URL url) throws IOException {
+        String response = "";
+
+        // If the URL is null, then return early.
+        if (url == null) {
+            return response;
+        }
+
+        HttpURLConnection urlConnection = null;
+        InputStream inputStream = null;
+        try {
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setReadTimeout(10000 /* milliseconds */);
+            urlConnection.setConnectTimeout(15000 /* milliseconds */);
+            urlConnection.setRequestMethod("GET");
+            urlConnection.connect();
+
+            // If the request was successful (response code 200),
+            // then read the input stream and parse the response.
+            if (urlConnection.getResponseCode() == 200) {
+                inputStream = urlConnection.getInputStream();
+                response = readFromStream(inputStream);
+            } else {
+                Log.e(LOG_TAG, "Error response code: " + urlConnection.getResponseCode());
+            }
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Problem retrieving the earthquake JSON results.", e);
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        }
+        return response;
+    }
+
+    /**
+     * Convert the {@link InputStream} into a String which contains the
+     * whole JSON response from the server.
+     */
+    private static String readFromStream(InputStream inputStream) throws IOException {
+        StringBuilder output = new StringBuilder();
+        if (inputStream != null) {
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
+            BufferedReader reader = new BufferedReader(inputStreamReader);
+            String line = reader.readLine();
+            while (line != null) {
+                output.append(line);
+                line = reader.readLine();
+            }
+        }
+        return output.toString();
+    }
+
+    /** public method to fetch JSON data*/
+    public static APOD fetchAPOD(String REQUEST_URL){
+        // Create URL object
+        URL url = createUrl(REQUEST_URL);
+
+        // Perform HTTP request to the URL and receive a JSON response back
+        String response = "";
+        try {
+            response = makeHttpRequest(url);
+        } catch (IOException e) {
+            Log.e(LOG_TAG,"IOException occurs:", e);
+        }
+
+        return extractAPODrequest(response);
     }
 
 }
