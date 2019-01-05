@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Awesome space</string>
+    <string name="no_network">No network connection.</string>
+    <string name="no_data">No data to display.</string>
 </resources>
