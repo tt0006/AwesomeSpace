@@ -1,10 +1,14 @@
 package com.example.us.awesomespace;
 
+import android.graphics.Bitmap;
+
 public class APOD {
 
     private String mTitle;
     private String mExplanation;
     private String mImageHDURL;
+    private String mImageURL;
+    private Bitmap mImg;
 
     /*
      * Create a new APOD object.
@@ -13,11 +17,12 @@ public class APOD {
      * @param mExplanation is the image explanation
      * @param mImageHDURL is the image hd URL
      * */
-    public APOD(String title, String explanation, String hdurl)
+    public APOD(String title, String explanation, String hdurl, String url)
     {
         mTitle = title;
         mExplanation = explanation;
         mImageHDURL = hdurl;
+        mImageURL= url;
     }
 
     /**
@@ -39,5 +44,20 @@ public class APOD {
      */
     public String getImageHDURL() {
         return mImageHDURL;
+    }
+
+    /**
+     * Get the image  url
+     */
+    public String getImageURL() {
+        return mImageURL;
+    }
+
+    public Bitmap getImg(){
+        return mImg;
+    }
+
+    public void setImg(Bitmap img){
+        mImg = img;
     }
 }

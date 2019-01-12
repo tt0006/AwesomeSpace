@@ -1,9 +1,12 @@
 package com.example.us.awesomespace;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,7 +48,8 @@ public final class QueryUtils {
             String title = root.optString("title");
             String explanation = root.optString("explanation");
             String hdurl = root.optString("hdurl");
-            apod = new APOD(title,explanation,hdurl);
+            String url = root.optString("url");
+            apod = new APOD(title,explanation,hdurl,url);
 
         } catch (JSONException e) {
             // If an error is thrown when executing any of the above statements in the "try" block,
@@ -86,8 +90,8 @@ public final class QueryUtils {
         InputStream inputStream = null;
         try {
             urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setReadTimeout(30000 /* milliseconds */);
-            urlConnection.setConnectTimeout(40000 /* milliseconds */);
+            urlConnection.setReadTimeout(20000 /* milliseconds */);
+            urlConnection.setConnectTimeout(30000 /* milliseconds */);
             urlConnection.setRequestMethod("GET");
             urlConnection.connect();
 
@@ -144,6 +148,57 @@ public final class QueryUtils {
         }
 
         return extractAPODrequest(response);
+    }
+
+    /** public method to fetch JSON data*/
+    public static Bitmap fetchImage(String REQUEST_URL){
+        // Create URL object
+        URL url = createUrl(REQUEST_URL);
+
+        // Perform HTTP request to the URL and receive a JSON response back
+        Bitmap response = null;
+        try {
+            response = downloadImage(url);
+        } catch (Exception e) {
+            Log.e(LOG_TAG,"Exception occurs:", e);
+        }
+
+        return response;
+    }
+
+    private static Bitmap downloadImage(URL url){
+        // Don't perform the request if the URL is null.
+        if (url == null) {
+            return null;
+        }
+        HttpURLConnection connection = null;
+        try{
+        // Initialize a new http url connection
+        connection = (HttpURLConnection) url.openConnection();
+
+        // Connect the http url connection
+        connection.connect();
+
+        // Get the input stream from http url connection
+        InputStream inputStream = connection.getInputStream();
+
+        // Initialize a new BufferedInputStream from InputStream
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+
+        // Convert BufferedInputStream to Bitmap object
+        Bitmap bmp = BitmapFactory.decodeStream(bufferedInputStream);
+
+        // Return the downloaded bitmap
+        return bmp;
+
+    }catch(IOException e){
+        e.printStackTrace();
+    }finally{
+        // Disconnect the http url connection
+        connection.disconnect();
+    }
+            return null;
+
     }
 
 }
