@@ -15,6 +15,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Helper methods related to parse response data
@@ -49,7 +51,9 @@ public final class QueryUtils {
             String explanation = root.optString("explanation");
             String hdurl = root.optString("hdurl");
             String url = root.optString("url");
-            apod = new APOD(title,explanation,hdurl,url);
+            String date = root.optString("date");
+            String mediaType = root.optString("media_type");
+            apod = new APOD(title, explanation, hdurl, url, date, mediaType);
 
         } catch (JSONException e) {
             // If an error is thrown when executing any of the above statements in the "try" block,
@@ -150,12 +154,33 @@ public final class QueryUtils {
         return extractAPODrequest(response);
     }
 
-    /** public method to fetch JSON data*/
+    /** public method to fetch APOD image*/
     public static Bitmap fetchImage(String REQUEST_URL){
         // Create URL object
         URL url = createUrl(REQUEST_URL);
 
         // Perform HTTP request to the URL and receive a JSON response back
+        Bitmap response = null;
+        try {
+            response = downloadImage(url);
+        } catch (Exception e) {
+            Log.e(LOG_TAG,"Exception occurs:", e);
+        }
+
+        return response;
+    }
+
+    /** public method to fetch youtube thumbnail*/
+    public static Bitmap fetchThumbnail(String REQUEST_URL){
+        String id = extractYTId(REQUEST_URL);
+        //Log.i("APODViewModelAct1", String.format("id: %s" ,id));
+
+        String thumbUrl = String.format("https://img.youtube.com/vi/%s/0.jpg", id);
+        //Log.i("APODViewModelAct1", String.format("url: %s" ,thumbUrl));
+
+        // Create URL object
+        URL url = createUrl(thumbUrl);
+
         Bitmap response = null;
         try {
             response = downloadImage(url);
@@ -199,6 +224,30 @@ public final class QueryUtils {
     }
             return null;
 
+    }
+
+    //helper method to extract youtube id from youtube url
+    private static String extractYTId(String youtubeUrl) {
+        String video_id = "";
+
+        try {
+            if(youtubeUrl != null && youtubeUrl.trim().length() > 0 && youtubeUrl.startsWith("http")) {
+                String expression = "^.*((youtu.be" + "\\/)" + "|(v\\/)|(\\/u\\/w\\/)|(embed\\/)|(watch\\?))\\??v?=?([^#\\&\\?]*).*";
+                // var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/;
+                //String expression = "^.*(?:youtu.be\\/|v\\/|e\\/|u\\/\\w+\\/|embed\\/|v=)([^#\\&\\?]*).*";
+                CharSequence input = youtubeUrl;
+                Pattern pattern = Pattern.compile(expression, Pattern.CASE_INSENSITIVE);
+                Matcher matcher = pattern.matcher(input);
+                if(matcher.matches()) {
+                    String groupIndex1 = matcher.group(7);
+                    if(groupIndex1 != null && groupIndex1.length() == 11)
+                        video_id = groupIndex1;
+                }
+            }
+        } catch(Exception e) {
+            Log.e("QueryUtils", "extractYTId " + e.getMessage());
+        }
+        return video_id;
     }
 
 }

@@ -1,17 +1,31 @@
 package com.example.us.awesomespace;
 
+import android.app.DatePickerDialog;
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.DatePicker;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import com.squareup.picasso.Picasso;
+import android.widget.Toast;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,6 +33,12 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar myBar;
     private Bitmap mBitmap;
     Context context = this;
+    APODViewModel mModel;
+    int mCurrentYear, mCurrentMonth, mCurrentDay;
+    Date mCurrentVisibleDate;
+    boolean mMenuButtonVisible;
+    private String mMediaType;
+    private String mYTurl;
 
     String REQUEST_URL = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
 
@@ -27,38 +47,101 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        TextView mEmptyStateTextView = findViewById(R.id.empty_view);
+        // Initial setup
+        TextView emptyStateTextView = findViewById(R.id.empty_view);
         myBar = findViewById(R.id.loading_spinner);
-        mImageView = findViewById(R.id.imageHdurl);
+        mImageView = findViewById(R.id.displayedImage);
+        mMenuButtonVisible = false;
+        // Get Current calendar object to set initial date values
+        final Calendar c = Calendar.getInstance();
+        mCurrentYear = c.get(Calendar.YEAR);
+        mCurrentMonth = c.get(Calendar.MONTH);
+        mCurrentDay = c.get(Calendar.DAY_OF_MONTH);
 
-        APODViewModel model = ViewModelProviders.of(this).get(APODViewModel.class);
-        model.setUrl(REQUEST_URL);
+        // Get the ViewModel
+        mModel = ViewModelProviders.of(this).get(APODViewModel.class);
+        // Set url
+        mModel.setUrl(REQUEST_URL);
 
+        // Create the observer which updates the UI.
+        final Observer<APOD> dataObserver = new Observer<APOD>() {
+            @Override
+            public void onChanged(@Nullable final APOD newData) {
+                // Update the UI when data is changed(updated)
+                display(newData);
+                myBar.setVisibility(View.GONE);
+            }
+        };
+
+        // onClick listener for image
         mImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Code to show image in full screen:
-                new PhotoFull(context, view, mBitmap);
+                if (mMediaType.equals("video") && mYTurl != null){
+                    // play youtube video
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(mYTurl)));
+                }
+                else{
+                    // Code to show image in full screen:
+                    new PhotoFull(context, view, mBitmap);
+                }
             }
         });
 
 
         //Check if network available
         if (isNetworkAvailable()) {
-
-            model.getAPODdata().observe(this, apod ->{display(apod);});
+            // Observe the LiveData, passing in this activity as the LifecycleOwner and the observer.
+           mModel.getAPODdata().observe(this, dataObserver);
         }
         else{
             // Set empty state text to display "No network found."
-            mEmptyStateTextView.setText(R.string.no_network);
+            emptyStateTextView.setText(R.string.no_network);
             //hide progress bar
             myBar.setVisibility(View.GONE);
-
         }
 
     }
 
-    //Helper method implementation to check network availability
+
+    // Menu block-----------------------------------------------------------------------------------
+    // create an action bar button
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.mymenu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    // handle menu dynamically
+    @Override
+    public boolean onPrepareOptionsMenu (Menu menu){
+        MenuItem item = menu.findItem(R.id.CalendarBtn);
+
+        if (mMenuButtonVisible) {
+            item.setEnabled(true);
+            item.getIcon().setAlpha(255);
+        } else {
+            // disabled
+            item.setEnabled(false);
+            item.getIcon().setAlpha(130);
+        }
+        return true;
+    }
+
+    // handle button activities
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.CalendarBtn) {
+            // display calendar dialog
+            datePicker();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    // Menu block end-------------------------------------------------------------------------------
+
+    //Helper method to check network availability
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -66,26 +149,80 @@ public class MainActivity extends AppCompatActivity {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
+    // Create/update UI
     public void display(APOD apod) {
 
-        TextView imgTitle = findViewById(R.id.imageTitle);
-        TextView imgExplanation = findViewById(R.id.imageExplanation);
+        TextView mediaDate = findViewById(R.id.date);
+        TextView mediaTitle = findViewById(R.id.mediaTitle);
+        TextView mediaExplanation = findViewById(R.id.explanation);
 
-        imgTitle.setText(apod.getImageTitle());
-        imgExplanation.setText(apod.getExplanation());
+        mediaDate.setText(apod.getMediaDate());
+        mediaTitle.setText(apod.getTitle());
+        mediaExplanation.setText(apod.getExplanation());
 
+        mCurrentVisibleDate = parseDate(apod.getMediaDate());
 
-        //String downloadImageURL = apod.getImageHDURL();
+        mMediaType = apod.getMediaType();
+        mYTurl = apod.getMediaURL();
+
         mBitmap = apod.getImg();
         if (mBitmap != null){
             mImageView.setImageBitmap(mBitmap);
-        //Picasso.get().load(downloadImageURL).into(mImageView);
-        }
-        else{
-            //TO DO Set default image
         }
 
         myBar.setVisibility(View.GONE);
+
+        // enable calendar menu icon
+        mMenuButtonVisible = true;
+        invalidateOptionsMenu();
+    }
+
+    //Helper method to display date picker dialog
+    private void datePicker(){
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                new DatePickerDialog.OnDateSetListener() {
+
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                        String selectedDate = year + "-" + (monthOfYear+1) + "-" + dayOfMonth;
+                        Date newSelectedDate = parseDate(selectedDate);
+                        Date now = new Date();
+                        if (newSelectedDate.equals(mCurrentVisibleDate)){
+                            Toast.makeText(getApplicationContext(), R.string.not_valid_current_date, Toast.LENGTH_SHORT).show();
+                        }
+                        else if(now.after(newSelectedDate)) {
+                            mModel.setUrl(REQUEST_URL +"&date="+ selectedDate);
+
+                            //update calendar selected date to display last selection
+                            mCurrentYear = year;
+                            mCurrentMonth = monthOfYear;
+                            mCurrentDay = dayOfMonth;
+
+                            myBar.setVisibility(View.VISIBLE);
+                            // disable calendar menu icon
+                            mMenuButtonVisible = false;
+                            invalidateOptionsMenu();
+                        }
+                        else{
+                            Toast.makeText(getApplicationContext(), R.string.not_valid_future_date, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, mCurrentYear, mCurrentMonth, mCurrentDay);
+        datePickerDialog.show();
+    }
+
+    //Helper method to parse date
+    private Date parseDate(String selectedDate){
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date strDate = null;
+        try{
+        strDate = sdf.parse(selectedDate);
+        }
+        catch (ParseException e){
+            Log.e("parseDate", "Fail to parse date");
+        }
+        return strDate;
     }
 
 }

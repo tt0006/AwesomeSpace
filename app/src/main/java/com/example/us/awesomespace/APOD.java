@@ -7,7 +7,9 @@ public class APOD {
     private String mTitle;
     private String mExplanation;
     private String mImageHDURL;
-    private String mImageURL;
+    private String mMediaURL;
+    private String mDate;
+    private String mMediaType;
     private Bitmap mImg;
 
     /*
@@ -16,47 +18,72 @@ public class APOD {
      * @param mTitle is the image title
      * @param mExplanation is the image explanation
      * @param mImageHDURL is the image hd URL
+     * @param mMediaURL is the media URL
+     * @param mDate is the image date
+     * @param mMediaType is the media type
      * */
-    public APOD(String title, String explanation, String hdurl, String url)
+    public APOD(String title, String explanation, String hdurl, String url, String date, String mediaType)
     {
         mTitle = title;
         mExplanation = explanation;
         mImageHDURL = hdurl;
-        mImageURL= url;
+        mMediaURL = url;
+        mDate = date;
+        mMediaType = mediaType;
     }
 
     /**
-     * Get the image title
+     * Get title
      */
-    public String getImageTitle() {
+    public String getTitle() {
         return mTitle;
     }
 
     /**
-     * Get the explanation
+     * Get explanation
      */
     public String getExplanation() {
         return mExplanation;
     }
 
     /**
-     * Get the image hd url
+     * Get image hd url
      */
     public String getImageHDURL() {
         return mImageHDURL;
     }
 
     /**
-     * Get the image  url
+     * Get media url
      */
-    public String getImageURL() {
-        return mImageURL;
+    public String getMediaURL() {
+        return mMediaURL;
     }
 
+    /**
+     * Get media type
+     */
+    public String getMediaType() {
+        return mMediaType;
+    }
+
+    /**
+     * Get media date value
+     */
+    public String getMediaDate() {
+        return mDate;
+    }
+
+    /**
+     * Get image
+     */
     public Bitmap getImg(){
         return mImg;
     }
 
+    /**
+     * Set image
+     */
     public void setImg(Bitmap img){
         mImg = img;
     }

@@ -2,4 +2,6 @@
     <string name="app_name">Awesome space</string>
     <string name="no_network">No network connection.</string>
     <string name="no_data">No data to display.</string>
+    <string name="not_valid_future_date">Future date is not allowed!</string>
+    <string name="not_valid_current_date">Data for this date is currently displayed!</string>
 </resources>

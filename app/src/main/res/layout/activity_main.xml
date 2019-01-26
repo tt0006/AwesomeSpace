@@ -11,10 +11,20 @@
         android:layout_height="wrap_content">
 
         <TextView
-            android:id="@+id/imageTitle"
+            android:id="@+id/date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:paddingTop="8dp"
+            android:textSize="14sp"
+            tools:text="01.12.2013" />
+
+        <TextView
+            android:id="@+id/mediaTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/date"
             android:layout_centerHorizontal="true"
             android:paddingBottom="8dp"
             android:paddingTop="8dp"
@@ -24,18 +34,18 @@
 
 
         <ImageView
-            android:id="@+id/imageHdurl"
-            android:layout_below="@id/imageTitle"
+            android:id="@+id/displayedImage"
+            android:layout_below="@id/mediaTitle"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:adjustViewBounds="true"
-            android:scaleType="centerInside" />
+            android:scaleType="centerCrop" />
 
         <TextView
-            android:id="@+id/imageExplanation"
+            android:id="@+id/explanation"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/imageHdurl"
+            android:layout_below="@id/displayedImage"
             android:padding="16dp"
             android:textSize="16sp"
             tools:text="some explanation" />
