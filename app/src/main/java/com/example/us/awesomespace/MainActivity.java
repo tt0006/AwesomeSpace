@@ -5,7 +5,6 @@ import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -21,7 +20,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import com.bumptech.glide.Glide;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -31,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
 
     private ImageView mImageView;
     private ProgressBar myBar;
-    private Bitmap mBitmap;
     Context context = this;
     APODViewModel mModel;
     int mCurrentYear, mCurrentMonth, mCurrentDay;
@@ -60,8 +58,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Get the ViewModel
         mModel = ViewModelProviders.of(this).get(APODViewModel.class);
-        // Set url
-        mModel.setUrl(REQUEST_URL);
 
         // Create the observer which updates the UI.
         final Observer<APOD> dataObserver = new Observer<APOD>() {
@@ -83,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else{
                     // Code to show image in full screen:
-                    new PhotoFull(context, view, mBitmap);
+                    new PhotoFull(context, view, mImageView.getDrawable());
                 }
             }
         });
@@ -165,10 +161,16 @@ public class MainActivity extends AppCompatActivity {
         mMediaType = apod.getMediaType();
         mYTurl = apod.getMediaURL();
 
-        mBitmap = apod.getImg();
-        if (mBitmap != null){
-            mImageView.setImageBitmap(mBitmap);
+        String imgurl;
+        if (apod.getMediaType().equals("video")) {
+            String id = QueryUtils.extractYTId(apod.getMediaURL());
+            imgurl = String.format("https://img.youtube.com/vi/%s/0.jpg", id);
+        } else {
+            imgurl = apod.getImageHDURL();
         }
+        Glide.with(getApplicationContext())
+                .load(imgurl)
+                .into(mImageView);
 
         myBar.setVisibility(View.GONE);
 
@@ -192,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
                             Toast.makeText(getApplicationContext(), R.string.not_valid_current_date, Toast.LENGTH_SHORT).show();
                         }
                         else if(now.after(newSelectedDate)) {
-                            mModel.setUrl(REQUEST_URL +"&date="+ selectedDate);
+                            mModel.newDateApod(String.format("%s&date=%s", REQUEST_URL, selectedDate));
 
                             //update calendar selected date to display last selection
                             mCurrentYear = year;
@@ -200,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
                             mCurrentDay = dayOfMonth;
 
                             myBar.setVisibility(View.VISIBLE);
+                            Glide.with(getApplicationContext()).clear(mImageView);
                             // disable calendar menu icon
                             mMenuButtonVisible = false;
                             invalidateOptionsMenu();

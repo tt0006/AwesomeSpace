@@ -2,6 +2,7 @@ package com.example.us.awesomespace;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -20,7 +21,7 @@ class PhotoFull extends PopupWindow {
     PhotoView photoView;
     ViewGroup parent;
 
-    PhotoFull(Context ctx, View v, Bitmap bitmap) {
+    PhotoFull(Context ctx, View v, Drawable bitmap) {
         super(((LayoutInflater) ctx.getSystemService(LAYOUT_INFLATER_SERVICE)).inflate( R.layout.image_full, null), ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
 
@@ -41,7 +42,7 @@ class PhotoFull extends PopupWindow {
         photoView.setMaximumScale(6);
         //parent = (ViewGroup) photoView.getParent();
 
-        photoView.setImageBitmap(bitmap);
+        photoView.setImageDrawable(bitmap);
         showAtLocation(v, Gravity.CENTER, 0, 0);
     }
 /*

@@ -227,7 +227,7 @@ public final class QueryUtils {
     }
 
     //helper method to extract youtube id from youtube url
-    private static String extractYTId(String youtubeUrl) {
+    static String extractYTId(String youtubeUrl) {
         String video_id = "";
 
         try {

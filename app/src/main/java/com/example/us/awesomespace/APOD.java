@@ -1,6 +1,7 @@
 package com.example.us.awesomespace;
 
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 
 public class APOD {
 
@@ -10,7 +11,7 @@ public class APOD {
     private String mMediaURL;
     private String mDate;
     private String mMediaType;
-    private Bitmap mImg;
+    private Drawable mImg;
 
     /*
      * Create a new APOD object.
@@ -77,14 +78,14 @@ public class APOD {
     /**
      * Get image
      */
-    public Bitmap getImg(){
+    public Drawable getImg(){
         return mImg;
     }
 
     /**
      * Set image
      */
-    public void setImg(Bitmap img){
+    public void setImg(Drawable img){
         mImg = img;
     }
 }
