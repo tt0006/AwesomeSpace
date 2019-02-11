@@ -3,7 +3,7 @@
 
     <item
         android:id="@+id/CalendarBtn"
-        android:icon="@drawable/calendar48"
+        android:icon="@drawable/calendar_7_64"
         android:title=""
         app:showAsAction="always"/>
 </menu>

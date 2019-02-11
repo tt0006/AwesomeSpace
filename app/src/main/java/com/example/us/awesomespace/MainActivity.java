@@ -9,6 +9,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,17 +29,20 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
+    private TextView mMediaDate;
+    private TextView mMediaTitle;
+    private TextView mMediaExplanation;
     private ImageView mImageView;
     private ProgressBar myBar;
-    Context context = this;
-    APODViewModel mModel;
-    int mCurrentYear, mCurrentMonth, mCurrentDay;
-    Date mCurrentVisibleDate;
-    boolean mMenuButtonVisible;
+    private APODViewModel mModel;
+    private int mCurrentYear, mCurrentMonth, mCurrentDay;
+    private Date mCurrentVisibleDate;
+    private boolean mMenuButtonVisible;
     private String mMediaType;
     private String mYTurl;
+    private ImageView mPlayIcon;
 
-    String REQUEST_URL = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
+    static String REQUEST_URL = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,10 +50,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Initial setup
+        mMediaDate = findViewById(R.id.date);
+        mMediaTitle = findViewById(R.id.mediaTitle);
+        mMediaExplanation = findViewById(R.id.explanation);
         TextView emptyStateTextView = findViewById(R.id.empty_view);
         myBar = findViewById(R.id.loading_spinner);
         mImageView = findViewById(R.id.displayedImage);
         mMenuButtonVisible = false;
+        mPlayIcon = findViewById(R.id.playIcon);
+
         // Get Current calendar object to set initial date values
         final Calendar c = Calendar.getInstance();
         mCurrentYear = c.get(Calendar.YEAR);
@@ -74,12 +83,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (mMediaType.equals("video") && mYTurl != null){
-                    // play youtube video
+                    // play youtube video in YouTube app or web browser
                     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(mYTurl)));
                 }
                 else{
                     // Code to show image in full screen:
-                    new PhotoFull(context, view, mImageView.getDrawable());
+                    displayFullScreenFragment();
                 }
             }
         });
@@ -99,6 +108,13 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void displayFullScreenFragment(){
+        FragmentManager fm = getSupportFragmentManager();
+        FullScreenFragmentDialog photoFragment = new FullScreenFragmentDialog();
+        photoFragment.setDrawable(mImageView.getDrawable());
+        photoFragment.show(fm, "photo_fragment");
+
+    }
 
     // Menu block-----------------------------------------------------------------------------------
     // create an action bar button
@@ -148,21 +164,23 @@ public class MainActivity extends AppCompatActivity {
     // Create/update UI
     public void display(APOD apod) {
 
-        TextView mediaDate = findViewById(R.id.date);
-        TextView mediaTitle = findViewById(R.id.mediaTitle);
-        TextView mediaExplanation = findViewById(R.id.explanation);
+        // Set text to text fields from apod object
+        mMediaTitle.setText(apod.getTitle());
+        mMediaExplanation.setText(apod.getExplanation());
 
-        mediaDate.setText(apod.getMediaDate());
-        mediaTitle.setText(apod.getTitle());
-        mediaExplanation.setText(apod.getExplanation());
-
+        // set APOD date to variable to check later and not reload the same object twice
         mCurrentVisibleDate = parseDate(apod.getMediaDate());
+        // set date text to text field to display above the image
+        mMediaDate.setText(new SimpleDateFormat("dd.MM.yyyy").format(mCurrentVisibleDate));
 
+        // set data to variables
+        // this is used to check what is displayed 'video' or 'image' to change image onClick behavior
         mMediaType = apod.getMediaType();
+        // this is used when media type is 'video' to play video in external app
         mYTurl = apod.getMediaURL();
 
         String imgurl;
-        if (apod.getMediaType().equals("video")) {
+        if (mMediaType.equals("video")) {
             String id = QueryUtils.extractYTId(apod.getMediaURL());
             imgurl = String.format("https://img.youtube.com/vi/%s/0.jpg", id);
         } else {
@@ -172,6 +190,10 @@ public class MainActivity extends AppCompatActivity {
                 .load(imgurl)
                 .into(mImageView);
 
+        // add play icon for videos
+        if (mMediaType.equals("video")){
+            mPlayIcon.setVisibility(View.VISIBLE);
+        }
         myBar.setVisibility(View.GONE);
 
         // enable calendar menu icon
@@ -202,6 +224,9 @@ public class MainActivity extends AppCompatActivity {
                             mCurrentDay = dayOfMonth;
 
                             myBar.setVisibility(View.VISIBLE);
+                            // hide play icon
+                            mPlayIcon.setVisibility(View.INVISIBLE);
+
                             Glide.with(getApplicationContext()).clear(mImageView);
                             // disable calendar menu icon
                             mMenuButtonVisible = false;

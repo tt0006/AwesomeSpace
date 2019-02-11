@@ -3,27 +3,33 @@ package com.example.us.awesomespace;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-
-public class APODViewModel extends ViewModel {
+/** Helper class to fetch data using LiveData and ViewModel*/
+class APODViewModel extends ViewModel {
 
     /** Query URL */
     private static String currentRequestUrl = MainActivity.REQUEST_URL;
     private static MutableLiveData<APOD> data;
 
-    public void newDateApod(String url){
+    /** Method to load data for new url*/
+    void newDateApod(String url){
+        //update current url with new value
         currentRequestUrl = url;
         //Reload data using new url
         loadData();
     }
 
+    /** Method to provide data for observer in MainActivity*/
     LiveData<APOD> getAPODdata(){
+        // if there is no data
         if (data == null){
             data = new MutableLiveData<>();
             loadData();
         }
+        // return new or existing data
         return data;
     }
 

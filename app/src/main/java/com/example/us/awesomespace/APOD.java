@@ -1,8 +1,10 @@
 package com.example.us.awesomespace;
 
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
+/**
+ * Helper class to store APOD data
+ */
 public class APOD {
 
     private String mTitle;
@@ -13,15 +15,15 @@ public class APOD {
     private String mMediaType;
     private Drawable mImg;
 
-    /*
+    /**
      * Create a new APOD object.
      *
-     * @param mTitle is the image title
-     * @param mExplanation is the image explanation
-     * @param mImageHDURL is the image hd URL
-     * @param mMediaURL is the media URL
-     * @param mDate is the image date
-     * @param mMediaType is the media type
+     * @param title is the media title
+     * @param explanation is the media explanation
+     * @param hdurl is the image hd URL
+     * @param url is the media URL
+     * @param date is the media date
+     * @param mediaType is the media type
      * */
     public APOD(String title, String explanation, String hdurl, String url, String date, String mediaType)
     {

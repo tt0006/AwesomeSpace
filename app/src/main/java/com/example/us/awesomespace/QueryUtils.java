@@ -1,12 +1,8 @@
 package com.example.us.awesomespace;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,12 +17,12 @@ import java.util.regex.Pattern;
 /**
  * Helper methods related to parse response data
  */
-public final class QueryUtils {
+final class QueryUtils {
 
     private static final String LOG_TAG = QueryUtils.class.getName();
 
     /**
-     * Create a private constructor as no one should ever create a {@link QueryUtils} object.
+     * Private constructor as no need to create {@link QueryUtils} object.
      * This class is only meant to hold static variables and methods, which can be accessed
      * directly from the class name QueryUtils (and an object instance of QueryUtils is not needed).
      */
@@ -38,7 +34,7 @@ public final class QueryUtils {
      * Return an {@link APOD} object that has been built up from
      * parsing a JSON response.
      */
-    public static APOD extractAPODrequest(String jsonResponse) {
+    private static APOD extractAPODrequest(String jsonResponse) {
 
         APOD apod = null;
 
@@ -56,10 +52,7 @@ public final class QueryUtils {
             apod = new APOD(title, explanation, hdurl, url, date, mediaType);
 
         } catch (JSONException e) {
-            // If an error is thrown when executing any of the above statements in the "try" block,
-            // catch the exception here, so the app doesn't crash. Print a log message
-            // with the message from the exception.
-            Log.e("QueryUtils", "Problem parsing the APOD JSON results", e);
+            Log.e(LOG_TAG, "Problem parsing the APOD JSON results", e);
         }
 
         // Return the APOD object
@@ -108,7 +101,7 @@ public final class QueryUtils {
                 Log.e(LOG_TAG, "Error response code: " + urlConnection.getResponseCode());
             }
         } catch (IOException e) {
-            Log.e(LOG_TAG, "Problem retrieving the earthquake JSON results.", e);
+            Log.e(LOG_TAG, "Problem retrieving the APOD JSON results.", e);
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -139,7 +132,7 @@ public final class QueryUtils {
     }
 
     /** public method to fetch JSON data*/
-    public static APOD fetchAPOD(String REQUEST_URL){
+    static APOD fetchAPOD(String REQUEST_URL){
         // Create URL object
         URL url = createUrl(REQUEST_URL);
 
@@ -148,85 +141,13 @@ public final class QueryUtils {
         try {
             response = makeHttpRequest(url);
         } catch (IOException e) {
-            Log.e(LOG_TAG,"IOException occurs:", e);
+            Log.e(LOG_TAG,"Exception occurs:", e);
         }
 
         return extractAPODrequest(response);
     }
 
-    /** public method to fetch APOD image*/
-    public static Bitmap fetchImage(String REQUEST_URL){
-        // Create URL object
-        URL url = createUrl(REQUEST_URL);
-
-        // Perform HTTP request to the URL and receive a JSON response back
-        Bitmap response = null;
-        try {
-            response = downloadImage(url);
-        } catch (Exception e) {
-            Log.e(LOG_TAG,"Exception occurs:", e);
-        }
-
-        return response;
-    }
-
-    /** public method to fetch youtube thumbnail*/
-    public static Bitmap fetchThumbnail(String REQUEST_URL){
-        String id = extractYTId(REQUEST_URL);
-        //Log.i("APODViewModelAct1", String.format("id: %s" ,id));
-
-        String thumbUrl = String.format("https://img.youtube.com/vi/%s/0.jpg", id);
-        //Log.i("APODViewModelAct1", String.format("url: %s" ,thumbUrl));
-
-        // Create URL object
-        URL url = createUrl(thumbUrl);
-
-        Bitmap response = null;
-        try {
-            response = downloadImage(url);
-        } catch (Exception e) {
-            Log.e(LOG_TAG,"Exception occurs:", e);
-        }
-
-        return response;
-    }
-
-    private static Bitmap downloadImage(URL url){
-        // Don't perform the request if the URL is null.
-        if (url == null) {
-            return null;
-        }
-        HttpURLConnection connection = null;
-        try{
-        // Initialize a new http url connection
-        connection = (HttpURLConnection) url.openConnection();
-
-        // Connect the http url connection
-        connection.connect();
-
-        // Get the input stream from http url connection
-        InputStream inputStream = connection.getInputStream();
-
-        // Initialize a new BufferedInputStream from InputStream
-        BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-
-        // Convert BufferedInputStream to Bitmap object
-        Bitmap bmp = BitmapFactory.decodeStream(bufferedInputStream);
-
-        // Return the downloaded bitmap
-        return bmp;
-
-    }catch(IOException e){
-        e.printStackTrace();
-    }finally{
-        // Disconnect the http url connection
-        connection.disconnect();
-    }
-            return null;
-
-    }
-
-    //helper method to extract youtube id from youtube url
+    /** helper method to extract youtube id from youtube url*/
     static String extractYTId(String youtubeUrl) {
         String video_id = "";
 
