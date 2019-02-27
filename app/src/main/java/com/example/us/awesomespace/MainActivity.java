@@ -35,11 +35,10 @@ public class MainActivity extends AppCompatActivity {
     private ImageView mImageView;
     private ProgressBar myBar;
     private APODViewModel mModel;
-    private int mCurrentYear, mCurrentMonth, mCurrentDay;
     private Date mCurrentVisibleDate;
     private boolean mMenuButtonVisible;
     private String mMediaType;
-    private String mYTurl;
+    private String mVideoURL;
     private ImageView mPlayIcon;
 
     static String REQUEST_URL = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
@@ -53,27 +52,34 @@ public class MainActivity extends AppCompatActivity {
         mMediaDate = findViewById(R.id.date);
         mMediaTitle = findViewById(R.id.mediaTitle);
         mMediaExplanation = findViewById(R.id.explanation);
-        TextView emptyStateTextView = findViewById(R.id.empty_view);
+        final TextView emptyStateTextView = findViewById(R.id.empty_view);
         myBar = findViewById(R.id.loading_spinner);
         mImageView = findViewById(R.id.displayedImage);
         mMenuButtonVisible = false;
         mPlayIcon = findViewById(R.id.playIcon);
 
-        // Get Current calendar object to set initial date values
-        final Calendar c = Calendar.getInstance();
-        mCurrentYear = c.get(Calendar.YEAR);
-        mCurrentMonth = c.get(Calendar.MONTH);
-        mCurrentDay = c.get(Calendar.DAY_OF_MONTH);
-
         // Get the ViewModel
         mModel = ViewModelProviders.of(this).get(APODViewModel.class);
+
+        //set current date in case it is not set other date yet
+        if (mModel.selectedDay+mModel.selectedMonth+mModel.selectedYear == 0){
+            // Get Current calendar object to set initial date values
+            final Calendar c = Calendar.getInstance();
+            mModel.selectedYear = c.get(Calendar.YEAR);
+            mModel.selectedMonth = c.get(Calendar.MONTH);
+            mModel.selectedDay = c.get(Calendar.DAY_OF_MONTH);
+        }
 
         // Create the observer which updates the UI.
         final Observer<APOD> dataObserver = new Observer<APOD>() {
             @Override
             public void onChanged(@Nullable final APOD newData) {
                 // Update the UI when data is changed(updated)
-                display(newData);
+                if (newData != null){
+                display(newData);}
+                else{
+                    emptyStateTextView.setText(R.string.null_APOD);
+                }
                 myBar.setVisibility(View.GONE);
             }
         };
@@ -82,9 +88,9 @@ public class MainActivity extends AppCompatActivity {
         mImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mMediaType.equals("video") && mYTurl != null){
+                if (mMediaType.equals("video") && mVideoURL != null){
                     // play youtube video in YouTube app or web browser
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(mYTurl)));
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(mVideoURL)));
                 }
                 else{
                     // Code to show image in full screen:
@@ -170,14 +176,15 @@ public class MainActivity extends AppCompatActivity {
 
         // set APOD date to variable to check later and not reload the same object twice
         mCurrentVisibleDate = parseDate(apod.getMediaDate());
-        // set date text to text field to display above the image
-        mMediaDate.setText(new SimpleDateFormat("dd.MM.yyyy").format(mCurrentVisibleDate));
+        // set date text to text field to display above the image in systems date format
+        mMediaDate.setText(SimpleDateFormat.getDateInstance().format(mCurrentVisibleDate));
+
 
         // set data to variables
         // this is used to check what is displayed 'video' or 'image' to change image onClick behavior
         mMediaType = apod.getMediaType();
         // this is used when media type is 'video' to play video in external app
-        mYTurl = apod.getMediaURL();
+        mVideoURL = apod.getMediaURL();
 
         String imgurl;
         if (mMediaType.equals("video")) {
@@ -186,9 +193,16 @@ public class MainActivity extends AppCompatActivity {
         } else {
             imgurl = apod.getImageHDURL();
         }
-        Glide.with(getApplicationContext())
-                .load(imgurl)
-                .into(mImageView);
+
+
+        // cover vimeo video case
+        if (mMediaType.equals("video") && mVideoURL.contains("vimeo.com/")){
+            mImageView.setImageResource(R.drawable.vimeo_logo);
+        } else{
+            Glide.with(getApplicationContext())
+                    .load(imgurl)
+                    .into(mImageView);
+        }
 
         // add play icon for videos
         if (mMediaType.equals("video")){
@@ -219,9 +233,9 @@ public class MainActivity extends AppCompatActivity {
                             mModel.newDateApod(String.format("%s&date=%s", REQUEST_URL, selectedDate));
 
                             //update calendar selected date to display last selection
-                            mCurrentYear = year;
-                            mCurrentMonth = monthOfYear;
-                            mCurrentDay = dayOfMonth;
+                            mModel.selectedYear = year;
+                            mModel.selectedMonth = monthOfYear;
+                            mModel.selectedDay = dayOfMonth;
 
                             myBar.setVisibility(View.VISIBLE);
                             // hide play icon
@@ -236,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
                             Toast.makeText(getApplicationContext(), R.string.not_valid_future_date, Toast.LENGTH_SHORT).show();
                         }
                     }
-                }, mCurrentYear, mCurrentMonth, mCurrentDay);
+                }, mModel.selectedYear, mModel.selectedMonth, mModel.selectedDay);
         datePickerDialog.show();
     }
 

@@ -32,6 +32,10 @@ public class FullScreenFragmentDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Dialog dialog = super.onCreateDialog(savedInstanceState);
         dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+
+        //save dialog instance to handle device rotation
+        setRetainInstance(true);
+
         return dialog;
     }
 
@@ -42,6 +46,9 @@ public class FullScreenFragmentDialog extends DialogFragment {
         if (dialog != null) {
             dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+            // set the animations to use on showing and hiding the dialog
+            dialog.getWindow().setWindowAnimations(R.style.dialog_animation_fade);
 
             mDecorView = dialog.getWindow().getDecorView();
 
@@ -78,6 +85,16 @@ public class FullScreenFragmentDialog extends DialogFragment {
         });
     }
 
+    @Override
+    public void onDestroyView() {
+        Dialog dialog = getDialog();
+        // handles https://code.google.com/p/android/issues/detail?id=17423
+        if (dialog != null && getRetainInstance()) {
+            dialog.setDismissMessage(null);
+        }
+        super.onDestroyView();
+    }
+
 
     private void hideSystemUI() {
         // Enables regular immersive mode.
@@ -104,7 +121,7 @@ public class FullScreenFragmentDialog extends DialogFragment {
         mDecorView.setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        //| View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 }

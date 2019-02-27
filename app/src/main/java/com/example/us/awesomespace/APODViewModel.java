@@ -10,6 +10,9 @@ import android.util.Log;
 /** Helper class to fetch data using LiveData and ViewModel*/
 class APODViewModel extends ViewModel {
 
+    // save selected date in ViewModel to save data over device rotation
+    public int selectedDay = 0, selectedMonth = 0, selectedYear = 0;
+
     /** Query URL */
     private static String currentRequestUrl = MainActivity.REQUEST_URL;
     private static MutableLiveData<APOD> data;
