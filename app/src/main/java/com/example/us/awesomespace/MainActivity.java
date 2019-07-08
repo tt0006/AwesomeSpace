@@ -10,6 +10,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.widget.CircularProgressDrawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -40,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private String mMediaType;
     private String mVideoURL;
     private ImageView mPlayIcon;
+    private Context mContext = this;
 
     static String REQUEST_URL = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
 
@@ -194,13 +196,20 @@ public class MainActivity extends AppCompatActivity {
             imgurl = apod.getImageHDURL();
         }
 
+        //Show spinner when loading image
+        CircularProgressDrawable circularProgressDrawable = new CircularProgressDrawable(mContext);
+        circularProgressDrawable.setStrokeWidth(5f);
+        circularProgressDrawable.setCenterRadius(50f);
+        circularProgressDrawable.start();
+
 
         // cover vimeo video case
         if (mMediaType.equals("video") && mVideoURL.contains("vimeo.com/")){
             mImageView.setImageResource(R.drawable.vimeo_logo);
         } else{
-            Glide.with(getApplicationContext())
+            Glide.with(mContext)
                     .load(imgurl)
+                    .placeholder(circularProgressDrawable)
                     .into(mImageView);
         }
 
@@ -227,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
                         Date newSelectedDate = parseDate(selectedDate);
                         Date now = new Date();
                         if (newSelectedDate.equals(mCurrentVisibleDate)){
-                            Toast.makeText(getApplicationContext(), R.string.not_valid_current_date, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(mContext, R.string.not_valid_current_date, Toast.LENGTH_SHORT).show();
                         }
                         else if(now.after(newSelectedDate)) {
                             mModel.newDateApod(String.format("%s&date=%s", REQUEST_URL, selectedDate));
@@ -247,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
                             invalidateOptionsMenu();
                         }
                         else{
-                            Toast.makeText(getApplicationContext(), R.string.not_valid_future_date, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(mContext, R.string.not_valid_future_date, Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, mModel.selectedYear, mModel.selectedMonth, mModel.selectedDay);
