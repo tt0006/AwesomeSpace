@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private String mVideoURL;
     private ImageView mPlayIcon;
     private Context mContext = this;
+    private CircularProgressDrawable mCircularProgressDrawable;
 
     static String REQUEST_URL = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
 
@@ -59,6 +60,11 @@ public class MainActivity extends AppCompatActivity {
         mImageView = findViewById(R.id.displayedImage);
         mMenuButtonVisible = false;
         mPlayIcon = findViewById(R.id.playIcon);
+        //Spinner for loading image
+        mCircularProgressDrawable = new CircularProgressDrawable(mContext);
+        mCircularProgressDrawable.setStrokeWidth(5f);
+        mCircularProgressDrawable.setCenterRadius(50f);
+        mCircularProgressDrawable.start();
 
         // Get the ViewModel
         mModel = ViewModelProviders.of(this).get(APODViewModel.class);
@@ -196,20 +202,13 @@ public class MainActivity extends AppCompatActivity {
             imgurl = apod.getImageHDURL();
         }
 
-        //Show spinner when loading image
-        CircularProgressDrawable circularProgressDrawable = new CircularProgressDrawable(mContext);
-        circularProgressDrawable.setStrokeWidth(5f);
-        circularProgressDrawable.setCenterRadius(50f);
-        circularProgressDrawable.start();
-
-
         // cover vimeo video case
         if (mMediaType.equals("video") && mVideoURL.contains("vimeo.com/")){
             mImageView.setImageResource(R.drawable.vimeo_logo);
         } else{
             Glide.with(mContext)
                     .load(imgurl)
-                    .placeholder(circularProgressDrawable)
+                    .placeholder(mCircularProgressDrawable)
                     .into(mImageView);
         }
 

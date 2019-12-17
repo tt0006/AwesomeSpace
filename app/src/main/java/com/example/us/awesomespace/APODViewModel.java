@@ -8,7 +8,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 /** Helper class to fetch data using LiveData and ViewModel*/
-class APODViewModel extends ViewModel {
+public class APODViewModel extends ViewModel {
 
     // save selected date in ViewModel to save data over device rotation
     public int selectedDay = 0, selectedMonth = 0, selectedYear = 0;
