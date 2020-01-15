@@ -1,5 +1,6 @@
 package com.example.us.awesomespace;
 
+import android.content.Context;
 import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -132,7 +133,7 @@ final class QueryUtils {
     }
 
     /** public method to fetch JSON data*/
-    static APOD fetchAPOD(String REQUEST_URL){
+    static void fetchAPOD(Context context, String REQUEST_URL){
         // Create URL object
         URL url = createUrl(REQUEST_URL);
 
@@ -144,7 +145,10 @@ final class QueryUtils {
             Log.e(LOG_TAG,"Exception occurs:", e);
         }
 
-        return extractAPODrequest(response);
+        APOD apodObj = extractAPODrequest(response);
+
+        DataRepository.getInstance(context).insertData(apodObj);
+
     }
 
     /** helper method to extract youtube id from youtube url*/

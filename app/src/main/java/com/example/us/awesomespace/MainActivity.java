@@ -1,17 +1,16 @@
 package com.example.us.awesomespace;
 
 import android.app.DatePickerDialog;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProviders;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.widget.CircularProgressDrawable;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentManager;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -25,7 +24,6 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
@@ -35,16 +33,14 @@ public class MainActivity extends AppCompatActivity {
     private TextView mMediaExplanation;
     private ImageView mImageView;
     private ProgressBar myBar;
-    private APODViewModel mModel;
     private Date mCurrentVisibleDate;
     private boolean mMenuButtonVisible;
     private String mMediaType;
     private String mVideoURL;
     private ImageView mPlayIcon;
     private Context mContext = this;
-    private CircularProgressDrawable mCircularProgressDrawable;
-
-    static String REQUEST_URL = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
+    private DataRepository mRepository;
+    private TextView mEmptyStateTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,42 +51,11 @@ public class MainActivity extends AppCompatActivity {
         mMediaDate = findViewById(R.id.date);
         mMediaTitle = findViewById(R.id.mediaTitle);
         mMediaExplanation = findViewById(R.id.explanation);
-        final TextView emptyStateTextView = findViewById(R.id.empty_view);
+        mEmptyStateTextView = findViewById(R.id.empty_view);
         myBar = findViewById(R.id.loading_spinner);
         mImageView = findViewById(R.id.displayedImage);
         mMenuButtonVisible = false;
         mPlayIcon = findViewById(R.id.playIcon);
-        //Spinner for loading image
-        mCircularProgressDrawable = new CircularProgressDrawable(mContext);
-        mCircularProgressDrawable.setStrokeWidth(5f);
-        mCircularProgressDrawable.setCenterRadius(50f);
-        mCircularProgressDrawable.start();
-
-        // Get the ViewModel
-        mModel = ViewModelProviders.of(this).get(APODViewModel.class);
-
-        //set current date in case it is not set other date yet
-        if (mModel.selectedDay+mModel.selectedMonth+mModel.selectedYear == 0){
-            // Get Current calendar object to set initial date values
-            final Calendar c = Calendar.getInstance();
-            mModel.selectedYear = c.get(Calendar.YEAR);
-            mModel.selectedMonth = c.get(Calendar.MONTH);
-            mModel.selectedDay = c.get(Calendar.DAY_OF_MONTH);
-        }
-
-        // Create the observer which updates the UI.
-        final Observer<APOD> dataObserver = new Observer<APOD>() {
-            @Override
-            public void onChanged(@Nullable final APOD newData) {
-                // Update the UI when data is changed(updated)
-                if (newData != null){
-                display(newData);}
-                else{
-                    emptyStateTextView.setText(R.string.null_APOD);
-                }
-                myBar.setVisibility(View.GONE);
-            }
-        };
 
         // onClick listener for image
         mImageView.setOnClickListener(new View.OnClickListener() {
@@ -110,17 +75,37 @@ public class MainActivity extends AppCompatActivity {
 
         //Check if network available
         if (isNetworkAvailable()) {
-            // Observe the LiveData, passing in this activity as the LifecycleOwner and the observer.
-           mModel.getAPODdata().observe(this, dataObserver);
+            mRepository = DataRepository.getInstance(getApplicationContext());
+            setupViewModel();
         }
         else{
             // Set empty state text to display "No network found."
-            emptyStateTextView.setText(R.string.no_network);
+            mEmptyStateTextView.setText(R.string.no_network);
             //hide progress bar
             myBar.setVisibility(View.GONE);
         }
 
     }
+
+    private void setupViewModel() {
+        APODViewModel viewModel = ViewModelProviders.of(this).get(APODViewModel.class);
+        viewModel.getAPODdata().observe(this, new Observer<APOD>() {
+            @Override
+            public void onChanged(@Nullable APOD apodObject) {
+                // Update the UI when data is changed(updated)
+                if (apodObject != null){
+                    display(apodObject);}
+                else{
+                    Toast.makeText(mContext, R.string.null_APOD, Toast.LENGTH_SHORT).show();
+                    // enable calendar menu icon
+                    mMenuButtonVisible = true;
+                    invalidateOptionsMenu();
+                }
+                myBar.setVisibility(View.GONE);
+            }
+        });
+    }
+
 
     private void displayFullScreenFragment(){
         FragmentManager fm = getSupportFragmentManager();
@@ -178,6 +163,8 @@ public class MainActivity extends AppCompatActivity {
     // Create/update UI
     public void display(APOD apod) {
 
+        mEmptyStateTextView.setText("");
+
         // Set text to text fields from apod object
         mMediaTitle.setText(apod.getTitle());
         mMediaExplanation.setText(apod.getExplanation());
@@ -208,7 +195,6 @@ public class MainActivity extends AppCompatActivity {
         } else{
             Glide.with(mContext)
                     .load(imgurl)
-                    .placeholder(mCircularProgressDrawable)
                     .into(mImageView);
         }
 
@@ -238,18 +224,27 @@ public class MainActivity extends AppCompatActivity {
                             Toast.makeText(mContext, R.string.not_valid_current_date, Toast.LENGTH_SHORT).show();
                         }
                         else if(now.after(newSelectedDate)) {
-                            mModel.newDateApod(String.format("%s&date=%s", REQUEST_URL, selectedDate));
+                            //clear text fields
+                            mPlayIcon.setVisibility(View.INVISIBLE);
+                            mMediaTitle.setText("");
+                            mMediaExplanation.setText("");
+                            mMediaDate.setText("");
+                            Glide.with(mContext).clear(mImageView);
 
                             //update calendar selected date to display last selection
-                            mModel.selectedYear = year;
-                            mModel.selectedMonth = monthOfYear;
-                            mModel.selectedDay = dayOfMonth;
+                            mRepository.updateCalendar(dayOfMonth, monthOfYear, year);
 
-                            myBar.setVisibility(View.VISIBLE);
-                            // hide play icon
-                            mPlayIcon.setVisibility(View.INVISIBLE);
-
-                            Glide.with(getApplicationContext()).clear(mImageView);
+                            //load new data
+                            if (isNetworkAvailable()) {
+                                mRepository.loadApodForNewDate(mContext, selectedDate);
+                                myBar.setVisibility(View.VISIBLE);
+                            }
+                            else{
+                                // Set empty state text to display "No network found."
+                                mEmptyStateTextView.setText(R.string.no_network);
+                                //hide progress bar
+                                myBar.setVisibility(View.GONE);
+                            }
                             // disable calendar menu icon
                             mMenuButtonVisible = false;
                             invalidateOptionsMenu();
@@ -258,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
                             Toast.makeText(mContext, R.string.not_valid_future_date, Toast.LENGTH_SHORT).show();
                         }
                     }
-                }, mModel.selectedYear, mModel.selectedMonth, mModel.selectedDay);
+                }, mRepository.getSelectedYear(), mRepository.getSelectedMonth(), mRepository.getSelectedDay());
         datePickerDialog.show();
     }
 
