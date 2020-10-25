@@ -2,9 +2,10 @@ package com.example.us.awesomespace;
 
 import android.app.DatePickerDialog;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -22,6 +23,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -88,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupViewModel() {
-        APODViewModel viewModel = ViewModelProviders.of(this).get(APODViewModel.class);
+        APODViewModel viewModel = new ViewModelProvider(this).get(APODViewModel.class);
         viewModel.getAPODdata().observe(this, new Observer<APOD>() {
             @Override
             public void onChanged(@Nullable APOD apodObject) {
@@ -101,7 +107,6 @@ public class MainActivity extends AppCompatActivity {
                     mMenuButtonVisible = true;
                     invalidateOptionsMenu();
                 }
-                myBar.setVisibility(View.GONE);
             }
         });
     }
@@ -195,6 +200,20 @@ public class MainActivity extends AppCompatActivity {
         } else{
             Glide.with(mContext)
                     .load(imgurl)
+                    // show loading spinner code
+                    .listener(new RequestListener<Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                            myBar.setVisibility(View.GONE);
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                            myBar.setVisibility(View.GONE);
+                            return false;
+                        }
+                    })
                     .into(mImageView);
         }
 
@@ -202,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
         if (mMediaType.equals("video")){
             mPlayIcon.setVisibility(View.VISIBLE);
         }
-        myBar.setVisibility(View.GONE);
+        //myBar.setVisibility(View.GONE);
 
         // enable calendar menu icon
         mMenuButtonVisible = true;

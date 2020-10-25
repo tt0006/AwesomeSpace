@@ -18,10 +18,12 @@ public class DownloadJobIntentService extends JobIntentService {
 
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
+        // get String URL from intent extra
         String downloadUrl = intent.getStringExtra("downloadUrl");
         if (downloadUrl == null){
             return;
         }
+        // run method to download data using service
         QueryUtils.fetchAPOD(getApplicationContext(), downloadUrl);
     }
 }

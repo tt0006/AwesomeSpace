@@ -7,17 +7,17 @@ import android.app.Application;
 /** Helper class to fetch data using LiveData and ViewModel*/
 public class APODViewModel extends AndroidViewModel {
 
-    private LiveData<APOD> data;
+    private LiveData<APOD> mData;
 
     public APODViewModel(Application application){
         super(application);
         DataRepository mRepository = DataRepository.getInstance(application.getApplicationContext());
-        data = mRepository.getApodObject();
+        mData = mRepository.getApodObject();
     }
 
     /** Method to provide data for observer in MainActivity*/
     LiveData<APOD> getAPODdata(){
-        return data;
+        return mData;
     }
 
 }

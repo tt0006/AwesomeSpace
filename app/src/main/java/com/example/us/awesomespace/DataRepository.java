@@ -7,35 +7,42 @@ import android.content.Intent;
 
 import java.util.Calendar;
 
+/** Helper class to deal with data*/
 public class DataRepository {
 
-    private static DataRepository sInstance;
+    private static DataRepository mInstance;
     private static MutableLiveData<APOD> mApodObject;
-    private static String currentRequestUrl = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
+    private static final String mRequestUrl = "DEMO";
 
-    private int selectedDay, selectedMonth, selectedYear;
+    private int mSelectedDay, mSelectedMonth, mSelectedYear;
 
+    // private constructor to ensure that instance can be created only via method
     private DataRepository(Context context){
-        // Get Current calendar object to set initial date values
-        Calendar c = Calendar.getInstance();
-        selectedYear = c.get(Calendar.YEAR);
-        selectedMonth = c.get(Calendar.MONTH);
-        selectedDay = c.get(Calendar.DAY_OF_MONTH);
 
-        downloadApod(context, currentRequestUrl);
+        // date values initialisation
+        Calendar c = Calendar.getInstance();
+        mSelectedYear = c.get(Calendar.YEAR);
+        mSelectedMonth = c.get(Calendar.MONTH);
+        mSelectedDay = c.get(Calendar.DAY_OF_MONTH);
+
+        // load initial data
+        downloadApod(context, mRequestUrl);
     }
 
+    /** Static method to get class instance
+     * Create new if it is null or return existed one*/
     public static DataRepository getInstance(final Context context) {
-        if (sInstance == null) {
+        if (mInstance == null) {
             synchronized (DataRepository.class) {
-                if (sInstance == null) {
-                    sInstance = new DataRepository(context);
+                if (mInstance == null) {
+                    mInstance = new DataRepository(context);
                 }
             }
         }
-        return sInstance;
+        return mInstance;
     }
 
+    /** Method to get LiveData APOD object to ViewModel class*/
     LiveData<APOD> getApodObject(){
         if (mApodObject == null){
             mApodObject = new MutableLiveData<>();
@@ -43,41 +50,44 @@ public class DataRepository {
         return mApodObject;
     }
 
+    /** Method to start background download with provided url*/
     private void downloadApod(Context context, String url){
         Intent intentToLoad = new Intent(context, DownloadJobIntentService.class);
         intentToLoad.putExtra("downloadUrl", url);
         DownloadJobIntentService.enqueueWork(context, intentToLoad);
-
     }
 
     /** Method to load data for new url*/
     void loadApodForNewDate(Context context, String selectedDate){
         //create new url with new date value
-        String url = String.format("%s&date=%s", currentRequestUrl, selectedDate);
+        String url = String.format("%s&date=%s", mRequestUrl, selectedDate);
         //Reload data using new url
         downloadApod(context, url);
     }
 
+    /** Method to insert object created using downloaded data from service to LiveData*/
     void insertData(APOD apod){
         mApodObject.postValue(apod);
     }
 
+    /** Method to update calendar values to selected date in date picker dialog*/
     void updateCalendar(int day, int month, int year){
-        selectedDay = day;
-        selectedMonth = month;
-        selectedYear = year;
+        mSelectedDay = day;
+        mSelectedMonth = month;
+        mSelectedYear = year;
     }
 
+    /** Methods to return saved date values*/
     int getSelectedDay(){
-        return selectedDay;
+        return mSelectedDay;
     }
 
     int getSelectedMonth(){
-        return selectedMonth;
+        return mSelectedMonth;
     }
 
     int getSelectedYear(){
-        return selectedYear;
+        return mSelectedYear;
     }
 
 }
