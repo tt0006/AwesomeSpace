@@ -6,6 +6,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+import androidx.core.app.JobIntentService;
 import androidx.fragment.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +17,10 @@ import android.widget.ImageView;
 import com.github.chrisbanes.photoview.OnPhotoTapListener;
 import com.github.chrisbanes.photoview.PhotoView;
 
+/**
+ * A {@link DialogFragment} subclass to show image in full screen
+ * (use com.github.chrisbanes.photoview to zoom functionality)
+ */
 public class FullScreenFragmentDialog extends DialogFragment {
     private View mDecorView;
     private boolean mUIState = true;
@@ -116,7 +121,7 @@ public class FullScreenFragmentDialog extends DialogFragment {
     }
 
     // Shows the system bars by removing all the flags
-// except for the ones that make the content appear under the system bars.
+    // except for the ones that make the content appear under the system bars.
     private void showSystemUI() {
         mDecorView.setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
