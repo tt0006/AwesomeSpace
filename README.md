@@ -1,4 +1,4 @@
-# Awesomespace
+# Awesome space
 
 One of my first projects on Android, where I learned how to create simple UI, basic network operations, simple json response parsing and basic usage of LiveData and ViewModel.
 
