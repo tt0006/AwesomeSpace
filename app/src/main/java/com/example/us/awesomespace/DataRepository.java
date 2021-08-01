@@ -12,7 +12,7 @@ public class DataRepository {
 
     private static DataRepository mInstance;
     private static MutableLiveData<APOD> mApodObject;
-    private static final String mRequestUrl = "https://api.nasa.gov/planetary/apod?api_key=DEME_KEY";
+    private static final String mRequestUrl = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY";
 
     private int mSelectedDay, mSelectedMonth, mSelectedYear;
 
