@@ -8,8 +8,8 @@ The app shows image/animation/video data, description and date picker icon.
 
 <table>
   <tr>
-    <td><image src="screenshots/main_panel.jpg" /></td>
-    <td><image src="screenshots/main_panel2.jpg" /></td>
+    <td><image src="Screenshots/main_panel.jpg" /></td>
+    <td><image src="Screenshots/main_panel2.jpg" /></td>
   </tr>
 </table>
 
@@ -19,8 +19,8 @@ You can check image in full screen and zoom it to see more details by taping on 
 
 <table>
   <tr>
-    <td><image src="screenshots/full_screen.jpg" /></td>
-    <td><image src="screenshots/zoom.jpg" /></td>
+    <td><image src="Screenshots/full_screen.jpg" /></td>
+    <td><image src="Screenshots/zoom.jpg" /></td>
   </tr>
 </table>
 
@@ -30,8 +30,8 @@ You can check images for any previous date by selecting it in date picker.
 
 <table>
   <tr>
-    <td><image src="screenshots/date_picker.jpg" /></td>
-    <td><image src="screenshots/other_date.jpg" /></td>
+    <td><image src="Screenshots/date_picker.jpg" /></td>
+    <td><image src="Screenshots/other_date.jpg" /></td>
   </tr>
 </table>
 
