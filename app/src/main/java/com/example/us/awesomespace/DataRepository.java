@@ -12,7 +12,7 @@ public class DataRepository {
 
     private static DataRepository mInstance;
     private static MutableLiveData<APOD> mApodObject;
-    private static final String mRequestUrl = "DEMO";
+    private static final String mRequestUrl = "DEMO_KEY";
 
     private int mSelectedDay, mSelectedMonth, mSelectedYear;
 
